@@ -167,3 +167,37 @@ def rms_norm(hidden_states: torch.Tensor, variance_epsilon: float) -> torch.Tens
     variance = hidden_states.square().mean(-1, keepdim=True)
     hidden_states = hidden_states * torch.rsqrt(variance + variance_epsilon)
     return hidden_states.to(input_dtype)
+
+
+class DyT(nn.Module):
+    """
+    Dynamic Tanh (DyT) layer from "Transformers without Normalization"
+    Paper: https://arxiv.org/abs/2503.10622
+    Replaces RMSNorm/LayerNorm as an nn.Module.
+    
+    Formula: DyT(x) = γ * tanh(α * x) + β
+    """
+    def __init__(self, hidden_size: int, init_a: float = 0.5):
+        """
+        Initializes the DyT layer.
+        
+        Args:
+            hidden_size (int): The size of the last dimension (channels/features).
+            init_a (float, optional): The initial value for the learnable scalar alpha. 
+                                     The paper suggests 0.5 as a good default.
+        """
+        super().__init__()
+        # alpha is a learnable scalar
+        self.alpha = nn.Parameter(torch.ones(1) * init_a)
+        # gamma and beta are learnable, per-channel (hidden_size) vectors
+        self.gamma = nn.Parameter(torch.ones(hidden_size))
+        self.beta = nn.Parameter(torch.zeros(hidden_size))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Applies the Dynamic Tanh operation.
+        Input tensor x is expected to have shape [..., hidden_size].
+        """
+        # Apply the DyT operation: γ * tanh(α * x) + β
+        # Parameters will be broadcasted and cast to x.dtype automatically.
+        return self.gamma * torch.tanh(self.alpha * x) + self.beta
