@@ -247,7 +247,7 @@ def train_one_epoch(model, optimizer, train_data_batches, device, epoch_num, tot
 
         # Handle potential NaN/Inf loss
         if torch.isnan(loss) or torch.isinf(loss):
-            print(f"!!! NaN/Inf loss detected in {model_name} at Epoch {epoch+1}. Skipping backward/step. !!!")
+            print(f"!!! NaN/Inf loss detected in {model_name} at Epoch {epoch_num+1}. Skipping backward/step. !!!")
             continue # Skip this batch
 
         # Backward pass and optimizer step
@@ -259,7 +259,7 @@ def train_one_epoch(model, optimizer, train_data_batches, device, epoch_num, tot
         
         # If the norm is NaN or Inf, gradients are bad
         if not torch.isfinite(total_norm):
-            print(f"!!! NaN/Inf gradients detected in {model_name} at Epoch {epoch+1}. Skipping optimizer step. !!!")
+            print(f"!!! NaN/Inf gradients detected in {model_name} at Epoch {epoch_num+1}. Skipping optimizer step. !!!")
             optimizer.zero_grad(set_to_none=True) # Clear the bad gradients
             continue # Skip this optimizer step
         # --- End Check ---
